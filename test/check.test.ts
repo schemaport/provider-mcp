@@ -6,7 +6,7 @@ import {
   refundOrderTool,
   unionTool,
 } from '@schemaport/core';
-import type { Diagnostic } from '@schemaport/core';
+import type { CanonicalTool, Diagnostic } from '@schemaport/core';
 import { describe, expect, it } from 'vitest';
 
 import { MCP_DIAGNOSTIC_CODES, mcpProvider } from '../src/index.js';
@@ -21,7 +21,9 @@ import {
   externalRefTool,
   invalidHeaderTool,
   longNameTool,
+  malformedRefTool,
   missingTypeTool,
+  nonSchemaRefTool,
   notObjectTool,
   nullableTool,
   numberHeaderTool,
@@ -140,6 +142,33 @@ describe('$ref rules', () => {
     expect(found.path).toBe('inputSchema.properties.total.$ref');
     expect(found.compile.supported).toBe(false);
     expect(found.docsUrl).toContain('#ref-resolution');
+  });
+
+  it('mcp/unresolvable-ref warns when the pointer targets a non-schema value', () => {
+    const found = only(mcpProvider.check(nonSchemaRefTool), MCP_DIAGNOSTIC_CODES.unresolvableRef);
+    expect(found.severity).toBe('warning');
+    expect(found.path).toBe('inputSchema.properties.alias.$ref');
+  });
+
+  it('mcp/unresolvable-ref warns on a malformed percent-escape instead of throwing', () => {
+    expect(() => mcpProvider.check(malformedRefTool)).not.toThrow();
+    expect(codes(mcpProvider.check(malformedRefTool))).toEqual([
+      MCP_DIAGNOSTIC_CODES.unresolvableRef,
+    ]);
+  });
+
+  it('accepts a pointer that targets a boolean schema', () => {
+    // JSON Schema 2020-12 allows `true`/`false` as a schema. Core's `JsonSchema`
+    // type models `$defs` as `Record<string, JsonSchema>`, so this needs a cast.
+    const booleanSchemaRefTool = {
+      name: 'boolean_schema_ref',
+      inputSchema: {
+        type: 'object',
+        $defs: { Anything: true },
+        properties: { any: { $ref: '#/$defs/Anything' } },
+      },
+    } as unknown as CanonicalTool;
+    expect(mcpProvider.check(booleanSchemaRefTool)).toEqual([]);
   });
 
   it('mcp/external-ref warns on a network URI', () => {

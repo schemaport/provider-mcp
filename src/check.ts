@@ -173,12 +173,18 @@ function checkRootType(inputSchema: JsonSchema, emit: Emit): void {
     return;
   }
 
+  const declared = inputSchema['type'];
+  const describes =
+    typeof declared === 'string' || Array.isArray(declared)
+      ? '`inputSchema` does not allow objects at the root.'
+      : `\`inputSchema.type\` is ${JSON.stringify(declared)}, which is not a JSON Schema type.`;
+
   emit({
     severity: 'error',
     code: CODES.inputSchemaNotObject,
     message:
-      '`inputSchema` does not allow objects at the root. MCP tool arguments are always a JSON ' +
-      'object, so `inputSchema` must declare `"type": "object"`.',
+      `${describes} MCP tool arguments are always a JSON object, so \`inputSchema\` must ` +
+      'declare `"type": "object"`.',
     path,
     compile: notCompilable(
       'Refused: rewriting a non-object root schema would change what the tool accepts.',
@@ -265,7 +271,9 @@ function resolvesLocally(root: JsonSchema, ref: string): boolean {
   if (ref === '#' || ref === '#/') return true;
 
   if (ref.startsWith('#/')) {
-    return resolvePointer(root, ref.slice(2)) !== undefined;
+    // The target must itself be a schema. `#/required/0` resolves to a string
+    // and `#/properties` to a map of schemas; neither is a valid `$ref` target.
+    return isSchemaValue(resolvePointer(root, ref.slice(2)));
   }
 
   const anchor = ref.slice(1);
@@ -273,10 +281,16 @@ function resolvesLocally(root: JsonSchema, ref: string): boolean {
   return collectSchemas(root, 'inputSchema').some((entry) => entry.schema['$anchor'] === anchor);
 }
 
+/** JSON Schema 2020-12 allows an object or a boolean wherever a schema is expected. */
+function isSchemaValue(value: unknown): boolean {
+  return typeof value === 'boolean' || isPlainObject(value);
+}
+
 function resolvePointer(root: JsonSchema, pointer: string): unknown {
   let current: unknown = root;
   for (const rawSegment of pointer.split('/')) {
-    const segment = decodeURIComponent(rawSegment).replace(/~1/g, '/').replace(/~0/g, '~');
+    const segment = unescapePointerSegment(rawSegment);
+    if (segment === undefined) return undefined;
     if (Array.isArray(current)) {
       const index = Number(segment);
       if (!Number.isInteger(index) || index < 0 || index >= current.length) return undefined;
@@ -287,6 +301,21 @@ function resolvePointer(root: JsonSchema, pointer: string): unknown {
     current = current[segment];
   }
   return current;
+}
+
+/**
+ * Percent-decode a URI fragment segment, then apply the RFC 6901 escapes in
+ * the required order (`~1` before `~0`). Returns `undefined` for a malformed
+ * percent-escape, which makes the pointer unresolvable rather than throwing.
+ */
+function unescapePointerSegment(segment: string): string | undefined {
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(segment);
+  } catch {
+    return undefined;
+  }
+  return decoded.replace(/~1/g, '/').replace(/~0/g, '~');
 }
 
 /* -------------------------------------------------------------------------- */

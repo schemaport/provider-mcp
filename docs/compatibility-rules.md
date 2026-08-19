@@ -109,6 +109,11 @@ Resolution supported: the root pointer (`#`), JSON Pointer fragments
 (`#/$defs/Money`, including `~0`/`~1` escapes and array indices) and `$anchor`
 fragments (`#money`). Anything else in the fragment space is reported.
 
+The target must itself be a schema — a JSON object, or the boolean `true` /
+`false`. A pointer that lands on a string or on the `properties` map, such as
+`#/required/0`, is reported as unresolvable. A pointer with a malformed
+percent-escape is reported too, rather than throwing.
+
 `compile()` emits the `$ref` unchanged. SchemaPort never resolves or inlines
 references.
 

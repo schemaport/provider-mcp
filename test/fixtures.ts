@@ -101,6 +101,30 @@ export const danglingRefTool: CanonicalTool = {
   },
 };
 
+/** A local `$ref` resolving to a string, not a subschema. */
+export const nonSchemaRefTool: CanonicalTool = {
+  name: 'non_schema_ref',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      id: { type: 'string' },
+      alias: { $ref: '#/required/0' },
+    },
+    required: ['id'],
+  },
+};
+
+/** A local `$ref` with a malformed percent-escape. */
+export const malformedRefTool: CanonicalTool = {
+  name: 'malformed_ref',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      total: { $ref: '#/$defs/%zz' },
+    },
+  },
+};
+
 /** A `$ref` pointing at a network URI. */
 export const externalRefTool: CanonicalTool = {
   name: 'external_ref',

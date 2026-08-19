@@ -30,9 +30,14 @@ as written.
 
 Resolution *detection* supports the root pointer (`#`), JSON Pointer fragments
 (`#/$defs/Money`, with `~0`/`~1` escapes and array indices) and `$anchor`
-fragments (`#money`). It does not implement `$id` base-URI resolution, so a
-schema that relocates its base with `$id` may be reported as unresolvable when
-a full JSON Schema implementation would resolve it.
+fragments (`#money`), and requires the target to be a schema — an object or a
+boolean. It does not implement `$id` base-URI resolution, so a schema that
+relocates its base with `$id` may be reported as unresolvable when a full JSON
+Schema implementation would resolve it.
+
+`$anchor` detection re-walks the whole schema per anchor reference. Tool
+schemas are small and this runs once per `check()`, so it is not a hot path,
+but it is quadratic in schemas that use many anchors.
 
 ## Subschema traversal is not exhaustive
 
