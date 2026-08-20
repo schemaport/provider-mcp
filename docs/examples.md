@@ -354,7 +354,7 @@ await mcpProvider.probe(refundOrder);
     'MCP has no hosted API to probe: it is a protocol that servers implement, and there is ' +
     'no endpoint or API key to send a tool definition to. SchemaPort validates MCP tool ' +
     'definitions locally instead — use validateMcpTool() and validateToolsListResult(), or ' +
-    '`schemaport check --target mcp`.',
+    '`schemaport check --targets mcp`.',
   ],
 }
 ```
