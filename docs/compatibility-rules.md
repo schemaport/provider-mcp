@@ -16,7 +16,7 @@ fixtures in `@schemaport/core` — including `openMapTool` (open string map),
 
 ## `mcp/tool-name-length`
 
-**warning** · path `name` · compile refuses
+**warning** · path `name` · compile emits the name unchanged
 
 The tool name is outside 1–128 characters.
 
@@ -32,7 +32,7 @@ memory rather than loaded from a file.
 
 ## `mcp/tool-name-characters`
 
-**warning** · path `name` · compile refuses
+**warning** · path `name` · compile emits the name unchanged
 
 The name contains characters outside `[A-Za-z0-9_.-]`.
 
@@ -42,6 +42,13 @@ The name contains characters outside `[A-Za-z0-9_.-]`.
 
 Example: `refund/order:v2` warns; `admin.tools.list`, `DATA_EXPORT_v2` and
 `getUser` do not.
+
+Both name rules carry `compile.supported: false`, which describes what compile
+can do about the issue — it cannot fix a name without changing the tool's
+identity. It does not mean compilation is refused. Refusal requires an `error`
+whose `compile.supported` is `false`, and these are warnings, so
+`compile()` returns `ok: true` and emits the name as written. The four rules
+that genuinely refuse are listed in [compilation.md](compilation.md).
 
 ---
 
