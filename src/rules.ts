@@ -33,6 +33,7 @@ export const DOC_URLS = {
   toolNames: `${SPEC_BASE}/server/tools#tool-names`,
   xMcpHeader: `${SPEC_BASE}/server/tools#x-mcp-header`,
   outputSchema: `${SPEC_BASE}/server/tools#output-schema`,
+  toolAnnotations: `${SPEC_BASE}/server/tools#tool-annotations`,
   jsonSchemaUsage: `${SPEC_BASE}/basic#json-schema-usage`,
   refResolution: `${SPEC_BASE}/basic#ref-resolution`,
   schemaReference: `${SPEC_BASE}/schema`,
@@ -108,6 +109,13 @@ export const CODES = {
   xMcpHeaderDuplicate: 'mcp/x-mcp-header-duplicate',
   xMcpHeaderUnsupportedType: 'mcp/x-mcp-header-unsupported-type',
   nullableKeywordIgnored: 'mcp/nullable-keyword-ignored',
+  metadataTitleInvalid: 'mcp/metadata-title-invalid',
+  metadataOutputSchemaInvalid: 'mcp/metadata-output-schema-invalid',
+  metadataOutputSchemaEmpty: 'mcp/metadata-output-schema-empty',
+  metadataAnnotationsInvalid: 'mcp/metadata-annotations-invalid',
+  metadataAnnotationsContradictory: 'mcp/metadata-annotations-contradictory',
+  metadataIconsInvalid: 'mcp/metadata-icons-invalid',
+  metadataMetaInvalid: 'mcp/metadata-meta-invalid',
 } as const;
 
 /** Transformation codes emitted by `compile()`. */
@@ -115,4 +123,5 @@ export const TRANSFORMATIONS = {
   addedInputSchemaType: 'added-input-schema-type-object',
   normalizedInputSchemaType: 'normalized-input-schema-type-to-object',
   narrowedInputSchemaType: 'narrowed-input-schema-type-to-object',
+  attachedToolMetadata: 'attached-tool-metadata',
 } as const;
