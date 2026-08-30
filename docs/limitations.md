@@ -86,18 +86,32 @@ enforces a bound, check against it yourself.
 The specification states no description length limit for MCP tools. None is
 enforced.
 
-## Fields `compile()` cannot emit
+## Fields the canonical tool cannot carry
 
 `CanonicalTool` is `{ name, description?, inputSchema }`. It has no field for
-MCP's `title`, `outputSchema`, `annotations`, `icons` or `_meta`, so
-`compile()` never emits any of them. All five are optional in MCP, so the
-output is still a valid `Tool` — but if your server needs them, add them to the
-compiled object yourself.
+MCP's `title`, `outputSchema`, `annotations`, `icons` or `_meta`, and it is not
+going to gain one: the canonical format describes a tool's *arguments* and is
+shared by four adapters, three of which have nowhere to put any of this.
 
-The most consequential of these is **`outputSchema`**. It is a first-class part
-of an MCP tool definition, it constrains `structuredContent`, and SchemaPort
-currently has no way to carry one through. Reported upstream to the core
-maintainer rather than worked around locally.
+They are supplied to `compileMcpTool()` per call instead, which keeps the
+canonical tool portable while letting the MCP output carry everything MCP can
+express:
+
+```ts
+compileMcpTool(tool, {
+  metadata: { outputSchema: { type: 'object', properties: { status: { type: 'string' } } } },
+});
+```
+
+See [tool-metadata.md](tool-metadata.md).
+
+The remaining limitation is that **metadata is per call, not per tool file**.
+A canonical `.json` tool definition cannot record its own `outputSchema`, so a
+pipeline that loads tools from disk has to keep the metadata alongside them and
+pair the two up itself. The `schemaport` CLI does not do that pairing: its
+`compile` command calls `compile(tool, { allowLossy })` and nothing else, so
+`schemaport compile --targets mcp` still emits the four-field form. Exposing
+metadata on the command line is a change to the CLI package, not this one.
 
 ## Tool-name uniqueness is not checked
 

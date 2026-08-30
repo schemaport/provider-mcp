@@ -16,12 +16,20 @@
 }
 ```
 
-Key order is fixed — `name`, then `description` when present, then
-`inputSchema` — so repeated compilation serializes byte-identically.
+Key order is fixed, following MCP's own `Tool` declaration — `name`, `title`,
+`description`, `icons`, `inputSchema`, `outputSchema`, `annotations`, `_meta` —
+with absent fields skipped, so repeated compilation serializes byte-identically.
 
-`title`, `outputSchema`, `annotations`, `icons` and `_meta` are never emitted:
-`CanonicalTool` has no fields to carry them. Add them yourself after compiling
-if your server needs them; they are all optional in MCP.
+`title`, `outputSchema`, `annotations`, `icons` and `_meta` have no counterpart
+in `CanonicalTool`, so they are supplied per call:
+
+```ts
+compileMcpTool(tool, { metadata: { title: 'Refund an order' } });
+```
+
+They are validated before emission and refused if malformed. See
+[tool-metadata.md](tool-metadata.md). Without a `metadata` option the output is
+exactly the three-field form shown above.
 
 ## Example
 
@@ -66,13 +74,15 @@ speaks JSON Schema, so the canonical schema is already the answer.
 
 ## Transformations
 
-Three, all touching only the root `type`, all `lossy: false`.
+Four, all `lossy: false`. Three touch only the root `type`; the fourth records
+metadata that was attached.
 
 | Code | When | Detail |
 |---|---|---|
 | `added-input-schema-type-object` | Root schema has no `type` | Adds `"type": "object"` |
 | `normalized-input-schema-type-to-object` | Root `type` is `["object"]` | Rewrites it as the literal string |
 | `narrowed-input-schema-type-to-object` | Root `type` is a union containing `"object"` | Narrows to `"object"`, dropping the others |
+| `attached-tool-metadata` | A `metadata` option was given | Names the fields added, in declaration order |
 
 ### Why none of them is lossy
 
@@ -82,6 +92,10 @@ dropped or weakened. All three transformations do the opposite: they make the
 root type at least as strict as it was. No `minimum`, `pattern`, `enum`,
 `additionalProperties` or composition keyword is ever dropped, rewritten or
 truncated by this adapter.
+
+`attached-tool-metadata` is not lossy for a simpler reason: it only adds
+fields. Nothing in the canonical schema is removed or weakened by declaring an
+`outputSchema` or a `title`.
 
 So `compile()` never needs `allowLossy` for MCP. Passing it changes nothing.
 

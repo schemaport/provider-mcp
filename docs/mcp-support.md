@@ -126,8 +126,20 @@ backwards compatibility.
 Structured content is **not** required merely because `outputSchema` is absent;
 `outputSchema` constrains `structuredContent` when both are present.
 
-SchemaPort's `CanonicalTool` has no output-schema field, so `compile()` never
-emits `outputSchema`. See [`limitations.md`](limitations.md).
+`CanonicalTool` has no output-schema field, so `outputSchema` is supplied as a
+compile option rather than read off the tool:
+
+```ts
+compileMcpTool(tool, {
+  metadata: { outputSchema: { type: 'array', items: { type: 'string' } } },
+});
+```
+
+Note that unlike `inputSchema` it need **not** be an object schema, which is why
+SchemaPort shape-checks it rather than running it through the canonical
+object-root rule. An *empty* `outputSchema` is warned about: it constrains
+nothing while still obliging the server to return `structuredContent` on every
+result. See [`tool-metadata.md`](tool-metadata.md).
 
 ## `tools/list` response shape
 
