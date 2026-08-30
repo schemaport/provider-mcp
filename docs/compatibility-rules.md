@@ -215,6 +215,30 @@ provider-specific convenience rather than a portable constraint.
 
 ---
 
+## Metadata rules
+
+These fire only when `compileMcpTool(tool, { metadata })` is given metadata.
+They validate the supplied MCP fields, not the canonical tool. Full detail in
+[`tool-metadata.md`](tool-metadata.md).
+
+| Code | Severity | Fires on |
+|---|---|---|
+| `mcp/metadata-title-invalid` | error | `title` is not a string |
+| `mcp/metadata-output-schema-invalid` | error | `outputSchema` is not an object, or its `$schema` is not a string |
+| `mcp/metadata-output-schema-empty` | warning | `outputSchema` is `{}` |
+| `mcp/metadata-annotations-invalid` | error | `annotations` is not an object, its `title` is not a string, or a hint is not a boolean |
+| `mcp/metadata-annotations-contradictory` | warning | `readOnlyHint: true` together with `destructiveHint: true` |
+| `mcp/metadata-icons-invalid` | error | An icon is not an object, or `src` / `mimeType` / `sizes` / `theme` is wrong |
+| `mcp/metadata-meta-invalid` | error | `_meta` is not an object |
+
+Every error refuses the compile. A malformed `Tool` is rejected by clients at
+`tools/list` time with no useful error, so failing here — where the message can
+name `metadata.icons[1].src` — is the more useful outcome.
+
+The two warnings do not refuse. `{}` is a valid schema and contradictory hints
+still produce a well-formed `Tool`; in both cases what is wrong is the intent,
+not the structure.
+
 ## Rules deliberately not implemented
 
 | Not implemented | Why |
@@ -223,5 +247,5 @@ provider-specific convenience rather than a portable constraint.
 | Composition-keyword depth / subschema cap | The spec says implementations SHOULD bound these but names **no** number. Picking one would be inventing a rule |
 | Restrictions on JSON Schema keywords | The spec explicitly allows any 2020-12 keyword in `inputSchema` |
 | Tool-name uniqueness | A whole-server property; not decidable from one tool |
-| `outputSchema` rules | `CanonicalTool` has no output schema to check |
+| Meaning-level `outputSchema` rules | The shape of a supplied `outputSchema` is checked (see [`tool-metadata.md`](tool-metadata.md)); whether it *describes* what the tool returns is not decidable from a schema |
 | Meta-schema validation of `inputSchema` | Would need a JSON Schema validator; this package has no runtime dependencies |

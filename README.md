@@ -83,12 +83,34 @@ to make the output look thorough — every one cites the spec text it comes from
 Full descriptions and the spec wording behind each rule:
 [`docs/compatibility-rules.md`](docs/compatibility-rules.md).
 
+### Tool metadata
+
+MCP's `title`, `outputSchema`, `annotations`, `icons` and `_meta` have no
+canonical counterpart, so they are supplied per compile:
+
+```ts
+compileMcpTool(tool, {
+  metadata: {
+    title: 'Look up order',
+    outputSchema: { type: 'object', properties: { status: { type: 'string' } } },
+    annotations: { readOnlyHint: true },
+  },
+});
+```
+
+`outputSchema` is the consequential one: it is how a server declares that it
+returns `structuredContent`. Metadata is validated before emission — a
+structural problem refuses the compile and names the exact field
+(`metadata.icons[1].src`) rather than letting a client reject the `Tool` later
+with no useful error. See [`docs/tool-metadata.md`](docs/tool-metadata.md).
+
 ### Transformations
 
-Three, all `lossy: false`, all touching only the root `type`:
+Four, all `lossy: false`. Three touch only the root `type` —
 `added-input-schema-type-object`, `normalized-input-schema-type-to-object`,
-`narrowed-input-schema-type-to-object`. **No MCP transformation is lossy** —
-see [`docs/compilation.md`](docs/compilation.md).
+`narrowed-input-schema-type-to-object` — and `attached-tool-metadata` records
+which metadata fields were added. **No MCP transformation is lossy** — see
+[`docs/compilation.md`](docs/compilation.md).
 
 ### Local validation instead of probing
 
@@ -116,8 +138,10 @@ response, not the JSON-RPC envelope. What they check and what they do not:
 - `$ref` is never resolved or inlined. Unresolvable and non-local refs are
   reported as warnings and the schema is emitted as written.
 - Schemas are not validated against a JSON Schema meta-schema.
-- MCP's `outputSchema`, `title`, `annotations`, `icons` and `_meta` are never
-  emitted: `CanonicalTool` has no field to carry them.
+- MCP's `outputSchema`, `title`, `annotations`, `icons` and `_meta` have no
+  counterpart in `CanonicalTool`, so they are supplied per compile rather than
+  read off the tool — a tool file cannot record its own. The `schemaport` CLI
+  does not pass them, so `compile --targets mcp` emits the three-field form.
 
 The full list, with reasons: [`docs/limitations.md`](docs/limitations.md).
 
@@ -128,6 +152,8 @@ The full list, with reasons: [`docs/limitations.md`](docs/limitations.md).
 - [`docs/compatibility-rules.md`](docs/compatibility-rules.md) — every rule
 - [`docs/compilation.md`](docs/compilation.md) — output shape and
   transformations
+- [`docs/tool-metadata.md`](docs/tool-metadata.md) — `outputSchema`, `title`,
+  `annotations`, `icons` and `_meta` as compile options
 - [`docs/validation.md`](docs/validation.md) — the two validation helpers
 - [`docs/limitations.md`](docs/limitations.md) — known limitations
 - [`docs/examples.md`](docs/examples.md) — worked examples

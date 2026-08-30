@@ -33,6 +33,11 @@ import { DISPLAY_NAME, MCP_DOCS, PROVIDER_ID, RULES_REVIEWED_AT } from './rules.
  * against. `probe()` always returns `status: 'skipped'`; use
  * {@link validateMcpTool} and {@link validateToolsListResult} to verify the
  * compiled definition offline instead.
+ *
+ * `compile()` here takes the shared `CompileOptions`. To attach MCP-only
+ * fields such as `outputSchema` or `annotations`, call {@link compileMcpTool}
+ * directly with `McpCompileOptions` — the shared provider interface has no
+ * slot for provider-specific options.
  */
 export const mcpProvider: SchemaPortProvider = {
   id: PROVIDER_ID,
@@ -64,6 +69,9 @@ export default mcpProvider;
 export { checkMcpTool, classifyRootType } from './check.js';
 export type { RootTypeVerdict } from './check.js';
 export { compileMcpTool } from './compile.js';
+export type { McpCompileOptions } from './compile.js';
+export { checkMcpMetadata, METADATA_FIELDS, presentMetadataFields } from './metadata.js';
+export type { McpMetadataField, McpToolMetadata } from './metadata.js';
 export { validateMcpTool, validateToolsListResult } from './validate.js';
 
 export {
